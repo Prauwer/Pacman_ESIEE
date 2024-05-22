@@ -85,10 +85,10 @@ score = 0
 PacManPos = [5, 5]
 
 Ghosts  = []
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "pink"  ]   )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "orange"] )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "cyan"  ]   )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "red"   ]     )         
+Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "pink"  , (0 , 1)] )
+Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "orange", (0 , 1)] )
+Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "cyan"  , (0 , 1)] )
+Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "red"   , (0 , 1)] )         
 
 
 
@@ -335,7 +335,17 @@ def GhostsPossibleMove(x, y):
       if ( TBL[x-1][y  ] == 0 ): L.append((-1, 0))
 
    return L
-   
+
+def detectCorridor(possibleMove):
+   # On vérifie qu'il n'y a que deux déplacements possibles
+   if len(possibleMove) !=2:
+      return False
+   else:
+      # On vérifie que ces déplacements sont de direction opposée
+      if (possibleMove[0][0] + possibleMove[1][0] == 0 and possibleMove[0][1] + possibleMove[1][1] == 0):
+         return True
+      return False
+
 
 def IAPacman():
    global PacManPos,  Ghosts
@@ -367,10 +377,21 @@ def IAPacman():
 def IAGhosts():
    #deplacement Fantome
    for F in Ghosts:
+      #On génère la liste des déplacements possibles
       L = GhostsPossibleMove(F[0], F[1])
+      
+      # S'il s'agit d'un couloir, on retire la case précédente à la liste des déplacements possibles
+      if (detectCorridor(L)):
+         previousTile = (-F[3][0],-F[3][1])
+         if (previousTile in L):
+            L.remove(previousTile)
+
+      # On choisit une direction au hasard parmi les déplacements possibles
       choix = random.randrange(len(L))
       F[0] += L[choix][0]
       F[1] += L[choix][1]
+      F[3] = (L[choix][0], L[choix][1])
+
 
 def updateDistanceMap():
    SaveDISTANCE = np.array(0)
