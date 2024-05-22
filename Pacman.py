@@ -319,10 +319,21 @@ def PacManPossibleMove():
 
 def GhostsPossibleMove(x, y):
    L = []
-   if ( TBL[x  ][y-1] == 2 ): L.append((0, -1))
-   if ( TBL[x  ][y+1] == 2 ): L.append((0,  1))
-   if ( TBL[x+1][y  ] == 2 ): L.append(( 1, 0))
-   if ( TBL[x-1][y  ] == 2 ): L.append((-1, 0))
+
+   # Si on est dans le spawn des fantomes, on peut s'y balader ou en sortir
+   if ( TBL[x  ][y  ] == 2 ):
+      if ( TBL[x  ][y-1] != 1 ): L.append((0, -1))
+      if ( TBL[x  ][y+1] != 1 ): L.append((0,  1))
+      if ( TBL[x+1][y  ] != 1 ): L.append(( 1, 0))
+      if ( TBL[x-1][y  ] != 1 ): L.append((-1, 0))
+   
+   # En dehors du spawn, on n'en rentre pas à nouveau
+   else:
+      if ( TBL[x  ][y-1] == 0 ): L.append((0, -1))
+      if ( TBL[x  ][y+1] == 0 ): L.append((0,  1))
+      if ( TBL[x+1][y  ] == 0 ): L.append(( 1, 0))
+      if ( TBL[x-1][y  ] == 0 ): L.append((-1, 0))
+
    return L
    
 
