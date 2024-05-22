@@ -54,19 +54,32 @@ GUM = PlacementsGUM()
 
 # création de la carte des distance
 def CreateDistanceMap():
-   DISTANCE = np.zeros(GUM.shape, dtype=np.int64)
+   distanceMap = np.zeros(GUM.shape, dtype=np.int64)
    
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
          if ( TBL[x][y] == 1):
-            DISTANCE[x][y] = 1000
+            distanceMap[x][y] = 1000
          elif (GUM[x][y] == 1):
-            DISTANCE[x][y] = 0
+            distanceMap[x][y] = 0
          else:
-            DISTANCE[x][y] = 100
-   return DISTANCE
+            distanceMap[x][y] = 100
+   return distanceMap
 
-DISTANCE = CreateDistanceMap()
+DISTANCEMAP = CreateDistanceMap()
+
+# création de la carte des distances des fantômes
+def createGhostMap():
+   ghostMap = np.zeros(TBL.shape, dtype=np.int64)
+   for x in range(LARGEUR):
+      for y in range(HAUTEUR):
+         if TBL[x][y] == 1:
+            ghostMap[x][y] = 1000
+         else:
+            ghostMap[x][y] = 100
+   return ghostMap
+
+GHOSTSMAP = createGhostMap()
       
 score = 0
 PacManPos = [5, 5]
@@ -315,20 +328,30 @@ def GhostsPossibleMove(x, y):
 
 def IAPacman():
    global PacManPos,  Ghosts
-   #deplacement Pacman
-   L = PacManPossibleMove()
-   choix = random.randrange(len(L))
-   PacManPos[0] += L[choix][0]
-   PacManPos[1] += L[choix][1]
-   
-   # juste pour montrer comment on se sert de la fonction SetInfo1
-   for x in range(LARGEUR):
-      for y in range(HAUTEUR):
-         info = x
-         if   x % 3 == 1 : info = "+∞"
-         elif x % 3 == 2 : info = ""
-         SetInfo1(x, y, info)
-
+   # deplacement Pacman
+   (x, y) = PacManPos
+   if GHOSTSMAP[x][y] > 3:
+      # mode recherche de gommes
+      neightborCases =  [
+         [x, y-1, DISTANCEMAP[x][y-1]],
+         [x-1, y, DISTANCEMAP[x-1][y]],
+         [x, y+1, DISTANCEMAP[x][y+1]],
+         [x+1, y, DISTANCEMAP[x+1][y]],
+      ]
+      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+      index = np.argmin(neightborDistance)
+   else:
+      # mode fuite
+      neightborCases =  [
+         [x, y-1, GHOSTSMAP[x][y-1]],
+         [x-1, y, GHOSTSMAP[x-1][y]],
+         [x, y+1, GHOSTSMAP[x][y+1]],
+         [x+1, y, GHOSTSMAP[x+1][y]],
+      ]
+      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+      index = np.argmax(neightborDistance)
+   PacManPos[0] = neightborCases[index][0]
+   PacManPos[1] = neightborCases[index][1]
 
 def IAGhosts():
    #deplacement Fantome
@@ -338,24 +361,48 @@ def IAGhosts():
       F[0] += L[choix][0]
       F[1] += L[choix][1]
 
-def updateDistanceMap(x: int, y: int):
-   neightborCases = [
-      [x, y-1],
-      [x-1, y],
-      [x, y+1],
-      [x+1, y],
-   ]
-   if DISTANCE[x][y] == 0:
-      DISTANCE[x][y] = 100
-   for x, y in neightborCases:
-      
+def updateDistanceMap():
+   SaveDISTANCE = np.array(0)
+   while not np.array_equal(SaveDISTANCE, DISTANCEMAP):
+      SaveDISTANCE = np.copy(DISTANCEMAP)
+      for x in range(1, DISTANCEMAP.shape[0]-1):
+         for y in range(1, DISTANCEMAP.shape[1]-1):
+            if (DISTANCEMAP[x][y] != 1000 and DISTANCEMAP[x][y] != 0):
+               neightborCases =  [
+                  DISTANCEMAP[x][y-1],
+                  DISTANCEMAP[x-1][y],
+                  DISTANCEMAP[x][y+1],
+                  DISTANCEMAP[x+1][y],
+               ]
+               DISTANCEMAP[x][y] = min(neightborCases) + 1
+               
+def updatePhantomMap():
+   SaveDISTANCE = np.array(0)
+   while not np.array_equal(SaveDISTANCE, GHOSTSMAP):
+      SaveDISTANCE = np.copy(GHOSTSMAP)
+      for x in range(1, GHOSTSMAP.shape[0]-1):
+         for y in range(1, GHOSTSMAP.shape[1]-1):
+            if [x, y] in [[ghost[0], ghost[1]] for ghost in Ghosts]:
+               GHOSTSMAP[x][y] = 0
+            elif (GHOSTSMAP[x][y] != 1000 and GHOSTSMAP[x][y] != 0):
+               neightborCases =  [
+                  GHOSTSMAP[x][y-1],
+                  GHOSTSMAP[x-1][y],
+                  GHOSTSMAP[x][y+1],
+                  GHOSTSMAP[x+1][y],
+               ]
+               GHOSTSMAP[x][y] = min(neightborCases) + 1
+            
 
 def eatPacGum():
    global score
    # si il y a une gomme à la position de pacman, on la retire et on incrémente de 100 le score
-   if GUM[PacManPos[0]][PacManPos[1]] == 1:
-      GUM[PacManPos[0]][PacManPos[1]] = 0
+   x, y = PacManPos[0], PacManPos[1]
+   if GUM[x][y] == 1:
+      GUM[x][y] = 0
       score += 100
+      DISTANCEMAP[x][y] = 100
+      updateDistanceMap()
    
       
  
@@ -364,12 +411,17 @@ def eatPacGum():
 iteration = 0
 def PlayOneTurn():
    global iteration
+   for x in range(LARGEUR):
+      for y in range(HAUTEUR):
+         SetInfo1(x, y, DISTANCEMAP[x][y])
+         SetInfo2(x, y, GHOSTSMAP[x][y])
    
    if not PAUSE_FLAG : 
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
       else:                     IAGhosts()
       eatPacGum()
+      updatePhantomMap()
    
    Affiche(PacmanColor = "yellow",  message = f"score : {score}")  
  
