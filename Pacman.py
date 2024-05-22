@@ -84,12 +84,12 @@ GHOSTSMAP = createGhostMap()
 score = 0
 PacManPos = [5, 5]
 
+# Ghost[x, y, color, direction(x,y)]
 Ghosts  = []
 Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "pink"  , (0 , 1)] )
 Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "orange", (0 , 1)] )
 Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "cyan"  , (0 , 1)] )
 Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "red"   , (0 , 1)] )         
-
 
 
 ##############################################################################
@@ -140,7 +140,8 @@ Window.title("ESIEE - PACMAN")
 
 # gestion de la pause
 
-PAUSE_FLAG = False 
+PAUSE_FLAG = False
+END_FLAG = False 
 
 def keydown(e):
    global PAUSE_FLAG
@@ -390,6 +391,8 @@ def IAGhosts():
       choix = random.randrange(len(L))
       F[0] += L[choix][0]
       F[1] += L[choix][1]
+
+      # On set la direction choisie
       F[3] = (L[choix][0], L[choix][1])
 
 
@@ -435,7 +438,12 @@ def eatPacGum():
       score += 100
       DISTANCEMAP[x][y] = 100
       updateDistanceMap()
-   
+
+def detectCollision():
+   for F in Ghosts:
+      if PacManPos == [F[0],F[1]]:
+         return True
+   return False
       
  
 #  Boucle principale de votre jeu appelée toutes les 500ms
@@ -443,15 +451,19 @@ def eatPacGum():
 iteration = 0
 def PlayOneTurn():
    global iteration
+   global PAUSE_FLAG
+   global END_FLAG
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
          SetInfo1(x, y, DISTANCEMAP[x][y])
          SetInfo2(x, y, GHOSTSMAP[x][y])
    
-   if not PAUSE_FLAG : 
+   if not PAUSE_FLAG and not END_FLAG : 
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
       else:                     IAGhosts()
+      if(detectCollision()):
+         END_FLAG = True
       eatPacGum()
       updatePhantomMap()
    
