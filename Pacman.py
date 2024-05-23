@@ -80,7 +80,6 @@ def createGhostMap():
    return ghostMap
 
 GHOSTSMAP = createGhostMap()
-print(GHOSTSMAP)
 
 # Stats PacMan
 score = 0            # Score
@@ -91,10 +90,10 @@ superpacgums ={      # Position des super pacgommmes
 
 # Ghost[x, y, color, direction(x,y)]
 Ghosts  = []
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "pink"  , (0 , 1)] )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "orange", (0 , 1)] )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "cyan"  , (0 , 1)] )
-Ghosts.append(  [LARGEUR//2,  HAUTEUR // 2 ,   "red"   , (0 , 1)] )         
+Ghosts.append(  [8,  5 ,   "pink"  , (0 , 1)] )
+Ghosts.append(  [9,  5 ,   "orange", (0 , 1)] )
+Ghosts.append(  [10, 5 ,   "cyan"  , (0 , 1)] )
+Ghosts.append(  [11, 5 ,   "red"   , (0 , 1)] )
 
 
 ##############################################################################
@@ -368,23 +367,27 @@ def IAPacman():
    # deplacement Pacman
    (x, y) = PacManPos
 
-   if (SuperPacMan > 0 ):
-      # mode chasse aux fantomes
+   # carte des fantomes
+   neightborCases =  [
+      [x, y-1, GHOSTSMAP[x][y-1]],
+      [x-1, y, GHOSTSMAP[x-1][y]],
+      [x, y+1, GHOSTSMAP[x][y+1]],
+      [x+1, y, GHOSTSMAP[x+1][y]],
+   ]
+
+   neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+
+   if (SuperPacMan > 0):
       SuperPacMan -= 1
 
-      # PLACEHOLDER : A remplacer par l'IA de chasse aux fantomes
-      neightborCases =  [
-         [x, y-1, GHOSTSMAP[x][y-1]],
-         [x-1, y, GHOSTSMAP[x-1][y]],
-         [x, y+1, GHOSTSMAP[x][y+1]],
-         [x+1, y, GHOSTSMAP[x+1][y]],
-      ]
-      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+   if (SuperPacMan > 2 and np.min(neightborDistance) < 100):
+      # mode chasse aux fantomes
       index = np.argmin(neightborDistance)
-      # FIN PLACEHOLDER
 
    elif GHOSTSMAP[x][y] > 3:
       # mode recherche de gommes
+      
+      # carte des gommes
       neightborCases =  [
          [x, y-1, DISTANCEMAP[x][y-1]],
          [x-1, y, DISTANCEMAP[x-1][y]],
@@ -395,14 +398,6 @@ def IAPacman():
       index = np.argmin(neightborDistance)
 
    else:
-      # mode fuite
-      neightborCases =  [
-         [x, y-1, GHOSTSMAP[x][y-1]],
-         [x-1, y, GHOSTSMAP[x-1][y]],
-         [x, y+1, GHOSTSMAP[x][y+1]],
-         [x+1, y, GHOSTSMAP[x+1][y]],
-      ]
-   
       neightborDistance = []
       for neightborCase in neightborCases:
          if not np.equal(neightborCase[2], 1000):
@@ -416,7 +411,7 @@ def IAPacman():
    PacManPos[1] = neightborCases[index][1]
 
 def IAGhosts():
-   #deplacement Fantome
+   # deplacement Fantome
    for F in Ghosts:
       #On génère la liste des déplacements possibles
       L = GhostsPossibleMove(F[0], F[1])
@@ -427,7 +422,7 @@ def IAGhosts():
          if (previousTile in L):
             L.remove(previousTile)
 
-      # On choisit une direction au hasard parmi les déplacements possibles
+      # On choisit une direction au hasard parmi les déplacements possibles et on l'applique
       choix = random.randrange(len(L))
       F[0] += L[choix][0]
       F[1] += L[choix][1] 
@@ -488,7 +483,7 @@ def eatPacGum():
       DISTANCEMAP[x][y] = 100
       if (x,y) in superpacgums:
          score += 500
-         SuperPacMan = 21
+         SuperPacMan = 23
       else:
          score += 100
       updateDistanceMap()
