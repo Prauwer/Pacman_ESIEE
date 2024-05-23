@@ -145,7 +145,8 @@ Window.title("ESIEE - PACMAN")
 # gestion de la pause
 
 PAUSE_FLAG = False
-END_FLAG = False 
+LOST_FLAG = False
+WIN_FLAG = False
 
 def keydown(e):
    global PAUSE_FLAG
@@ -214,6 +215,7 @@ animPacman = [ 5, 10, 15, 10, 5]
 def Affiche(PacmanColor, message):
    global anim_bouche
    global SuperPacMan
+   global anim_blink
 
    if SuperPacMan > 0:
       PacmanColor = "#39FF15"
@@ -279,7 +281,7 @@ def Affiche(PacmanColor, message):
    yy = To(PacManPos[1])
    e = 20
    anim_bouche = (anim_bouche+1)%len(animPacman)
-   ouv_bouche = animPacman[anim_bouche] 
+   ouv_bouche = animPacman[anim_bouche]
    tour = 360 - 2 * ouv_bouche
    canvas.create_oval(xx-e, yy-e,  xx+e, yy+e,  fill = PacmanColor)
    canvas.create_polygon(xx, yy, xx+e, yy+ouv_bouche, xx+e, yy-ouv_bouche,  fill="black")  # bouche
@@ -308,10 +310,18 @@ def Affiche(PacmanColor, message):
       dec += 3
       
    # texte  
+   global LOST_FLAG
+   global WIN_FLAG
    
-   canvas.create_text(screeenWidth // 2,  screenHeight- 50 ,  text = "PAUSE : PRESS SPACE",  fill ="yellow",  font = PoliceTexte)
+   if LOST_FLAG:
+      canvas.create_text(screeenWidth // 2,  screenHeight- 50 ,  text = "GAME OVER",  fill ="yellow",  font = PoliceTexte)
+   elif WIN_FLAG:
+      canvas.create_text(screeenWidth // 2,  screenHeight- 50 ,  text = "YOU WIN!",  fill ="yellow",  font = PoliceTexte)
+   else:
+      canvas.create_text(screeenWidth // 2,  screenHeight- 50 ,  text = "PAUSE : PRESS SPACE",  fill ="yellow",  font = PoliceTexte)
+
    canvas.create_text(screeenWidth // 2,  screenHeight- 20 ,  text = message,  fill ="yellow",  font = PoliceTexte)
-   
+
  
 AfficherPage(0)
             
@@ -504,13 +514,14 @@ def PlayOneTurn():
    global SuperPacMan
    global iteration
    global PAUSE_FLAG
-   global END_FLAG
+   global LOST_FLAG
+   global WIN_FLAG
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
          # SetInfo1(x, y, DISTANCEMAP[x][y])
          SetInfo2(x, y, GHOSTSMAP[x][y])
    
-   if not PAUSE_FLAG and not END_FLAG : 
+   if not PAUSE_FLAG and not LOST_FLAG and not WIN_FLAG : 
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
       else:                     IAGhosts()
@@ -519,10 +530,13 @@ def PlayOneTurn():
          if SuperPacMan > 0:
             killGhost(ghost)
          else:
-            END_FLAG = True
+            LOST_FLAG = True
       eatPacGum()
       updateGhostMap()
-   
+
+      WIN_FLAG = not np.any(GUM == 1)
+
+
    Affiche(PacmanColor = "yellow",  message = f"score : {score}")  
  
  
