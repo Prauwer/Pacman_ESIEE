@@ -368,47 +368,49 @@ def IAPacman():
    (x, y) = PacManPos
 
    # carte des fantomes
-   neightborCases =  [
+   ghostCases =  [
       [x, y-1, GHOSTSMAP[x][y-1]],
       [x-1, y, GHOSTSMAP[x-1][y]],
       [x, y+1, GHOSTSMAP[x][y+1]],
       [x+1, y, GHOSTSMAP[x+1][y]],
    ]
 
-   neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+   # carte des gommes
+   gumCases =  [
+      [x, y-1, DISTANCEMAP[x][y-1]],
+      [x-1, y, DISTANCEMAP[x-1][y]],
+      [x, y+1, DISTANCEMAP[x][y+1]],
+      [x+1, y, DISTANCEMAP[x+1][y]],
+   ]
 
+   # décrémenter le temps restant de bonus à chaque tour
    if (SuperPacMan > 0):
       SuperPacMan -= 1
 
-   if (SuperPacMan > 2 and np.min(neightborDistance) < 100):
-      # mode chasse aux fantomes
+   # mode chasse aux fantomes s'il y a assez de bonus et qu'il existe des fantomes sur la map
+   neightborDistance = np.array([neightborCase[2] for neightborCase in ghostCases])
+
+   if (SuperPacMan > 2 and np.min(neightborDistance) < 99):
       index = np.argmin(neightborDistance)
 
+   # mode recherche de gommes
    elif GHOSTSMAP[x][y] > 3:
-      # mode recherche de gommes
-      
-      # carte des gommes
-      neightborCases =  [
-         [x, y-1, DISTANCEMAP[x][y-1]],
-         [x-1, y, DISTANCEMAP[x-1][y]],
-         [x, y+1, DISTANCEMAP[x][y+1]],
-         [x+1, y, DISTANCEMAP[x+1][y]],
-      ]
-      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+      neightborDistance = np.array([neightborCase[2] for neightborCase in gumCases])
       index = np.argmin(neightborDistance)
 
+   # mode fuite
    else:
       neightborDistance = []
-      for neightborCase in neightborCases:
-         if not np.equal(neightborCase[2], 1000):
-            neightborDistance.append(neightborCase[2])
+      for ghostCase in ghostCases:
+         if not np.equal(ghostCase[2], 1000):
+            neightborDistance.append(ghostCase[2])
             
          else:
             neightborDistance.append(-1)
       neightborDistance = np.array(neightborDistance)
       index = np.argmax(neightborDistance)
-   PacManPos[0] = neightborCases[index][0]
-   PacManPos[1] = neightborCases[index][1]
+   PacManPos[0] = ghostCases[index][0]
+   PacManPos[1] = ghostCases[index][1]
 
 def IAGhosts():
    # deplacement Fantome
