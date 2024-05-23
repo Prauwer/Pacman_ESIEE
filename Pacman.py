@@ -80,9 +80,13 @@ def createGhostMap():
    return ghostMap
 
 GHOSTSMAP = createGhostMap()
-      
-score = 0
-PacManPos = [5, 5]
+
+# Stats PacMan
+score = 0            # Score
+PacManPos = [5, 5]   # Position de PacMan
+SuperPacMan = 0      # Temps de bonus de PacMan
+superpacgums ={      # Position des super pacgommmes
+(1, 1), (1, 9), (18, 1), (18, 9)}
 
 # Ghost[x, y, color, direction(x,y)]
 Ghosts  = []
@@ -209,6 +213,10 @@ animPacman = [ 5, 10, 15, 10, 5]
 
 def Affiche(PacmanColor, message):
    global anim_bouche
+   global SuperPacMan
+
+   if SuperPacMan > 0:
+      PacmanColor = "#39FF15"
    
    def CreateCircle(x, y, r, coul):
       canvas.create_oval(x-r, y-r, x+r, y+r,  fill=coul,  width  = 0)
@@ -233,15 +241,21 @@ def Affiche(PacmanColor, message):
             yy = To(y)
             yyy = To(y+1)
             canvas.create_line(xx, yy, xx, yyy, width = EPAISS, fill="blue")
-            
+
    # pacgum
+   global superpacgums
+
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
          if ( GUM[x][y] == 1):
             xx = To(x) 
             yy = To(y)
             e = 5
-            canvas.create_oval(xx-e, yy-e, xx+e, yy+e, fill="orange")
+            color = "orange"
+            if (x,y) in superpacgums:
+               e = 12
+               color = "white"
+            canvas.create_oval(xx-e, yy-e, xx+e, yy+e, fill=color)
             
    #extra info
    for x in range(LARGEUR):
@@ -349,10 +363,26 @@ def detectCorridor(possibleMove):
 
 
 def IAPacman():
-   global PacManPos,  Ghosts
+   global PacManPos,  Ghosts, SuperPacMan
    # deplacement Pacman
    (x, y) = PacManPos
-   if GHOSTSMAP[x][y] > 3:
+
+   if (SuperPacMan > 0 ):
+      # mode chasse aux fantomes
+      SuperPacMan -= 1
+
+      # PLACEHOLDER : A remplacer par l'IA de chasse aux fantomes
+      neightborCases =  [
+         [x, y-1, DISTANCEMAP[x][y-1]],
+         [x-1, y, DISTANCEMAP[x-1][y]],
+         [x, y+1, DISTANCEMAP[x][y+1]],
+         [x+1, y, DISTANCEMAP[x+1][y]],
+      ]
+      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+      index = np.argmin(neightborDistance)
+      # FIN PLACEHOLDER
+
+   elif GHOSTSMAP[x][y] > 3:
       # mode recherche de gommes
       neightborCases =  [
          [x, y-1, DISTANCEMAP[x][y-1]],
@@ -362,6 +392,7 @@ def IAPacman():
       ]
       neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
       index = np.argmin(neightborDistance)
+
    else:
       # mode fuite
       neightborCases =  [
@@ -395,6 +426,11 @@ def IAGhosts():
       # On set la direction choisie
       F[3] = (L[choix][0], L[choix][1])
 
+def killGhost(ghost):
+   global score
+   score += 2000
+   ghost[0] = random.randint(8, 11)
+   ghost[1] = 5
 
 def updateDistanceMap():
    SaveDISTANCE = np.array(0)
@@ -431,25 +467,33 @@ def updatePhantomMap():
 
 def eatPacGum():
    global score
+   global superpacgums
+   global SuperPacMan
+
    # si il y a une gomme à la position de pacman, on la retire et on incrémente de 100 le score
    x, y = PacManPos[0], PacManPos[1]
    if GUM[x][y] == 1:
       GUM[x][y] = 0
-      score += 100
       DISTANCEMAP[x][y] = 100
+      if (x,y) in superpacgums:
+         score += 500
+         SuperPacMan = 21
+      else:
+         score += 100
       updateDistanceMap()
 
 def detectCollision():
    for F in Ghosts:
       if PacManPos == [F[0],F[1]]:
-         return True
-   return False
+         return F
+   return None
       
  
 #  Boucle principale de votre jeu appelée toutes les 500ms
 
 iteration = 0
 def PlayOneTurn():
+   global SuperPacMan
    global iteration
    global PAUSE_FLAG
    global END_FLAG
@@ -462,8 +506,12 @@ def PlayOneTurn():
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
       else:                     IAGhosts()
-      if(detectCollision()):
-         END_FLAG = True
+      ghost = detectCollision()
+      if(ghost != None):
+         if SuperPacMan > 0:
+            killGhost(ghost)
+         else:
+            END_FLAG = True
       eatPacGum()
       updatePhantomMap()
    
