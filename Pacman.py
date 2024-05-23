@@ -130,7 +130,7 @@ def SetInfo2(x, y, info):
 #
 ##############################################################################
 
- 
+
 
 ZOOM = 40   # taille d'une case en pixels
 EPAISS = 8  # epaisseur des murs bleus en pixels
@@ -140,7 +140,8 @@ screenHeight = (HAUTEUR+2) * ZOOM
 
 Window = tk.Tk()
 Window.geometry(str(screeenWidth)+"x"+str(screenHeight))   # taille de la fenetre
-Window.title("ESIEE - PACMAN")
+Window.title("ESIEE - PACMAN by Antonin and Zackary :v")
+
 
 # gestion de la pause
 
@@ -397,9 +398,8 @@ def IAPacman():
    if (SuperPacMan > 0):
       SuperPacMan -= 1
 
-   # mode chasse aux fantomes s'il y a assez de bonus et qu'il existe des fantomes sur la map
+   # mode chasse aux fantomes (s'il y a assez de bonus et qu'il existe des fantomes sur la map)
    neightborDistance = np.array([neightborCase[2] for neightborCase in ghostCases])
-
    if (SuperPacMan > 2 and np.min(neightborDistance) < 99):
       index = np.argmin(neightborDistance)
 
@@ -414,9 +414,9 @@ def IAPacman():
       for ghostCase in ghostCases:
          if not np.equal(ghostCase[2], 1000):
             neightborDistance.append(ghostCase[2])
-            
          else:
             neightborDistance.append(-1)
+
       neightborDistance = np.array(neightborDistance)
       index = np.argmax(neightborDistance)
    PacManPos[0] = ghostCases[index][0]
@@ -425,7 +425,7 @@ def IAPacman():
 def IAGhosts():
    # deplacement Fantome
    for F in Ghosts:
-      #On génère la liste des déplacements possibles
+      # On génère la liste des déplacements possibles
       L = GhostsPossibleMove(F[0], F[1])
       
       # S'il s'agit d'un couloir, on retire la case précédente à la liste des déplacements possibles
@@ -442,11 +442,13 @@ def IAGhosts():
       # On set la direction choisie
       F[3] = (L[choix][0], L[choix][1])
 
+
 def killGhost(ghost):
    global score
    score += 2000
    ghost[0] = random.randint(8, 11)
    ghost[1] = 5
+
 
 def updateDistanceMap():
    SaveDISTANCE = np.array(0)
@@ -481,21 +483,23 @@ def updateGhostMap():
                min_neighbor = min(neightborCases)
                if not np.equal(min_neighbor, 100):
                   GHOSTSMAP[x][y] = min_neighbor + 1
-            
+
 
 def eatPacGum():
    global score
    global superpacgums
    global SuperPacMan
 
-   # si il y a une gomme à la position de pacman, on la retire et on incrémente de 100 le score
+   # si il y a une gomme à la position de pacman, on la retire
    x, y = PacManPos[0], PacManPos[1]
    if GUM[x][y] == 1:
       GUM[x][y] = 0
       DISTANCEMAP[x][y] = 100
+      # Super Pac Gomme : On donne 23 secondes de bonus et + 500 score
       if (x,y) in superpacgums:
          score += 500
          SuperPacMan = 23
+      # Pac Gomme : + 100 score
       else:
          score += 100
       updateDistanceMap()
@@ -506,7 +510,7 @@ def detectCollision():
          return F
    return None
       
- 
+
 #  Boucle principale de votre jeu appelée toutes les 500ms
 
 iteration = 0
@@ -516,24 +520,32 @@ def PlayOneTurn():
    global PAUSE_FLAG
    global LOST_FLAG
    global WIN_FLAG
+
+   # Debug
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
          # SetInfo1(x, y, DISTANCEMAP[x][y])
-         SetInfo2(x, y, GHOSTSMAP[x][y])
+         # SetInfo2(x, y, GHOSTSMAP[x][y])
+         pass
    
    if not PAUSE_FLAG and not LOST_FLAG and not WIN_FLAG : 
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
       else:                     IAGhosts()
+
+      # En cas de collision avec un fantôme...
       ghost = detectCollision()
       if(ghost != None):
+         # On tue le fantome si on est en mode Super
          if SuperPacMan > 0:
             killGhost(ghost)
+         # On meurt sinon
          else:
             LOST_FLAG = True
       eatPacGum()
       updateGhostMap()
 
+      # On finit la partie si toutes les gommes ont étées mangées
       WIN_FLAG = not np.any(GUM == 1)
 
 
@@ -544,10 +556,3 @@ def PlayOneTurn():
 #  demarrage de la fenetre - ne pas toucher
 
 Window.mainloop()
-
- 
-   
-   
-    
-   
-   
