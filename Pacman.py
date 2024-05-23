@@ -73,13 +73,14 @@ def createGhostMap():
    ghostMap = np.zeros(TBL.shape, dtype=np.int64)
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
-         if TBL[x][y] == 1:
-            ghostMap[x][y] = 1000
-         else:
+         if TBL[x][y] == 0:
             ghostMap[x][y] = 100
+         else:
+            ghostMap[x][y] = 1000
    return ghostMap
 
 GHOSTSMAP = createGhostMap()
+print(GHOSTSMAP)
 
 # Stats PacMan
 score = 0            # Score
@@ -373,10 +374,10 @@ def IAPacman():
 
       # PLACEHOLDER : A remplacer par l'IA de chasse aux fantomes
       neightborCases =  [
-         [x, y-1, DISTANCEMAP[x][y-1]],
-         [x-1, y, DISTANCEMAP[x-1][y]],
-         [x, y+1, DISTANCEMAP[x][y+1]],
-         [x+1, y, DISTANCEMAP[x+1][y]],
+         [x, y-1, GHOSTSMAP[x][y-1]],
+         [x-1, y, GHOSTSMAP[x-1][y]],
+         [x, y+1, GHOSTSMAP[x][y+1]],
+         [x+1, y, GHOSTSMAP[x+1][y]],
       ]
       neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
       index = np.argmin(neightborDistance)
@@ -401,7 +402,15 @@ def IAPacman():
          [x, y+1, GHOSTSMAP[x][y+1]],
          [x+1, y, GHOSTSMAP[x+1][y]],
       ]
-      neightborDistance = np.array([neightborCase[2] for neightborCase in neightborCases])
+   
+      neightborDistance = []
+      for neightborCase in neightborCases:
+         if not np.equal(neightborCase[2], 1000):
+            neightborDistance.append(neightborCase[2])
+            
+         else:
+            neightborDistance.append(-1)
+      neightborDistance = np.array(neightborDistance)
       index = np.argmax(neightborDistance)
    PacManPos[0] = neightborCases[index][0]
    PacManPos[1] = neightborCases[index][1]
@@ -421,7 +430,7 @@ def IAGhosts():
       # On choisit une direction au hasard parmi les déplacements possibles
       choix = random.randrange(len(L))
       F[0] += L[choix][0]
-      F[1] += L[choix][1]
+      F[1] += L[choix][1] 
 
       # On set la direction choisie
       F[3] = (L[choix][0], L[choix][1])
@@ -447,15 +456,15 @@ def updateDistanceMap():
                ]
                DISTANCEMAP[x][y] = min(neightborCases) + 1
                
-def updatePhantomMap():
+def updateGhostMap():
    SaveDISTANCE = np.array(0)
    while not np.array_equal(SaveDISTANCE, GHOSTSMAP):
       SaveDISTANCE = np.copy(GHOSTSMAP)
       for x in range(1, GHOSTSMAP.shape[0]-1):
          for y in range(1, GHOSTSMAP.shape[1]-1):
-            if [x, y] in [[ghost[0], ghost[1]] for ghost in Ghosts]:
+            if [x, y] in [[ghost[0], ghost[1]] for ghost in Ghosts if Ghosts] and not np.equal(GHOSTSMAP[x][y], 1000):
                GHOSTSMAP[x][y] = 0
-            elif (GHOSTSMAP[x][y] != 1000 and GHOSTSMAP[x][y] != 0):
+            elif not np.equal(GHOSTSMAP[x][y], 1000):
                neightborCases =  [
                   GHOSTSMAP[x][y-1],
                   GHOSTSMAP[x-1][y],
@@ -499,7 +508,7 @@ def PlayOneTurn():
    global END_FLAG
    for x in range(LARGEUR):
       for y in range(HAUTEUR):
-         SetInfo1(x, y, DISTANCEMAP[x][y])
+         # SetInfo1(x, y, DISTANCEMAP[x][y])
          SetInfo2(x, y, GHOSTSMAP[x][y])
    
    if not PAUSE_FLAG and not END_FLAG : 
@@ -513,7 +522,7 @@ def PlayOneTurn():
          else:
             END_FLAG = True
       eatPacGum()
-      updatePhantomMap()
+      updateGhostMap()
    
    Affiche(PacmanColor = "yellow",  message = f"score : {score}")  
  
