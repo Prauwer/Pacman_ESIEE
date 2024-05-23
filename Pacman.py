@@ -462,7 +462,7 @@ def updateGhostMap():
       SaveDISTANCE = np.copy(GHOSTSMAP)
       for x in range(1, GHOSTSMAP.shape[0]-1):
          for y in range(1, GHOSTSMAP.shape[1]-1):
-            if [x, y] in [[ghost[0], ghost[1]] for ghost in Ghosts if Ghosts] and not np.equal(GHOSTSMAP[x][y], 1000):
+            if [x, y] in [[ghost[0], ghost[1]] for ghost in Ghosts if Ghosts] and not np.equal(GHOSTSMAP[x][y],1000 ):
                GHOSTSMAP[x][y] = 0
             elif not np.equal(GHOSTSMAP[x][y], 1000):
                neightborCases =  [
@@ -471,7 +471,9 @@ def updateGhostMap():
                   GHOSTSMAP[x][y+1],
                   GHOSTSMAP[x+1][y],
                ]
-               GHOSTSMAP[x][y] = min(neightborCases) + 1
+               min_neighbor = min(neightborCases)
+               if not np.equal(min_neighbor, 100):
+                  GHOSTSMAP[x][y] = min_neighbor + 1
             
 
 def eatPacGum():
