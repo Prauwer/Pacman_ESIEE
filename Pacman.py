@@ -149,13 +149,14 @@ PAUSE_FLAG = False
 LOST_FLAG = False
 WIN_FLAG = False
 
+# On passe en pause/dé-pause si la barre d'espace est appuyée
 def keydown(e):
    global PAUSE_FLAG
    if e.char == ' ' : 
       PAUSE_FLAG = not PAUSE_FLAG 
  
 Window.bind("<KeyPress>",  keydown)
- 
+
 
 # création de la frame principale stockant plusieurs pages
 
@@ -245,7 +246,7 @@ def Affiche(PacmanColor, message):
             yyy = To(y+1)
             canvas.create_line(xx, yy, xx, yyy, width = EPAISS, fill="blue")
 
-   # pacgum
+   # pacgums
    global superpacgums
 
    for x in range(LARGEUR):
@@ -255,7 +256,7 @@ def Affiche(PacmanColor, message):
             yy = To(y)
             e = 5
             color = "orange"
-            if (x,y) in superpacgums:
+            if (x,y) in superpacgums: # s'il s'agit d'une superpacgum, on lui donne une autre taille et couleur
                e = 12
                color = "white"
             canvas.create_oval(xx-e, yy-e, xx+e, yy+e, fill=color)
@@ -367,7 +368,7 @@ def detectCorridor(possibleMove):
    if len(possibleMove) !=2:
       return False
    else:
-      # On vérifie que ces déplacements sont de direction opposée
+      # On vérifie que ces déplacements sont de direction opposée (leur somme doit faire 0)
       if (possibleMove[0][0] + possibleMove[1][0] == 0 and possibleMove[0][1] + possibleMove[1][1] == 0):
          return True
       return False
@@ -449,7 +450,7 @@ def killGhost(ghost):
    ghost[0] = random.randint(8, 11)
    ghost[1] = 5
 
-
+# TODO : à commenter
 def updateDistanceMap():
    SaveDISTANCE = np.array(0)
    while not np.array_equal(SaveDISTANCE, DISTANCEMAP):
@@ -464,7 +465,8 @@ def updateDistanceMap():
                   DISTANCEMAP[x+1][y],
                ]
                DISTANCEMAP[x][y] = min(neightborCases) + 1
-               
+
+# TODO : à commenter
 def updateGhostMap():
    SaveDISTANCE = np.array(0)
    while not np.array_equal(SaveDISTANCE, GHOSTSMAP):
@@ -504,6 +506,7 @@ def eatPacGum():
          score += 100
       updateDistanceMap()
 
+# Renvoie le fantome s'il y a une collision avec, None sinon
 def detectCollision():
    for F in Ghosts:
       if PacManPos == [F[0],F[1]]:
@@ -528,6 +531,7 @@ def PlayOneTurn():
          # SetInfo2(x, y, GHOSTSMAP[x][y])
          pass
    
+   # Le jeu alterène les cours de pacman et des fantomes s'il n'y est ni en pause, ni gagné ou perdu
    if not PAUSE_FLAG and not LOST_FLAG and not WIN_FLAG : 
       iteration += 1
       if iteration % 2 == 0 :   IAPacman()
