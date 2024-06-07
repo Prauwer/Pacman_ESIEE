@@ -363,6 +363,7 @@ def GhostsPossibleMove(x, y):
 
    return L
 
+# Détecte si la configuration de déplacements possibles correspond à un couloir
 def detectCorridor(possibleMove):
    # On vérifie qu'il n'y a que deux déplacements possibles
    if len(possibleMove) !=2:
@@ -399,7 +400,7 @@ def IAPacman():
    if (SuperPacMan > 0):
       SuperPacMan -= 1
 
-   # mode chasse aux fantomes (s'il y a assez de bonus et qu'il existe des fantomes sur la map)
+   # mode chasse aux fantomes (s'il y a + de 2 secondes de bonus restantes et qu'il existe des fantomes sur la map, hors du spawn)
    neightborDistance = np.array([neightborCase[2] for neightborCase in ghostCases])
    if (SuperPacMan > 2 and np.min(neightborDistance) < 99):
       index = np.argmin(neightborDistance)
@@ -443,7 +444,7 @@ def IAGhosts():
       # On set la direction choisie
       F[3] = (L[choix][0], L[choix][1])
 
-
+# Ajoute 2000 au score et téléporte le fantome dans sa zone de spawn
 def killGhost(ghost):
    global score
    score += 2000
