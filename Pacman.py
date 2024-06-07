@@ -451,7 +451,7 @@ def killGhost(ghost):
    ghost[0] = random.randint(8, 11)
    ghost[1] = 5
 
-# TODO : à commenter
+# On met à jour la carte de distance des gommes
 def updateDistanceMap():
    SaveDISTANCE = np.array(0)
    while not np.array_equal(SaveDISTANCE, DISTANCEMAP):
@@ -467,7 +467,7 @@ def updateDistanceMap():
                ]
                DISTANCEMAP[x][y] = min(neightborCases) + 1
 
-# TODO : à commenter
+# On met à jour la carte de distance des phantomes
 def updateGhostMap():
    SaveDISTANCE = np.array(0)
    while not np.array_equal(SaveDISTANCE, GHOSTSMAP):
